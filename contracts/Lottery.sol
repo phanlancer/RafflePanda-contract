@@ -140,7 +140,7 @@ contract Lottery is SafeMath {
 
   /**
    * @notice To bet for a number by sending Ether
-   * @param numberToBet The number that the player wants to bet for. Must be between 1 and 10 both inclusive
+   * @param numberToBet The number that the player wants to bet for. Must be between 1 and numberOfTickets both inclusive
    */
   function buyTicket(uint numberToBet) external payable{
 
