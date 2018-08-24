@@ -58,7 +58,7 @@ contract Lottery is SafeMath {
   address public lotteryOwner; // address to fund the raised money to
   uint public lotteryAmount = 1 ether; // Default 1 ether. The total amount of the lottery
   uint public ticketCost = 200 finney; // Default 0.2 ether. The cost of the ticket
-  uint8 public numberOfPrizeTiers = 1; // Default 1 tiers. Number of prize tiers
+  uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
   PrizeTier[] public prizeTiers; // Prize tiers
 
   // Lottery limitation
@@ -115,6 +115,11 @@ contract Lottery is SafeMath {
     numberOfTickets = (lotteryAmount + ticketCost - 1) / ticketCost;
   }
 
+  /**
+   * @notice After contructor is called fillPrizeTiers should be called to fill prize tiers
+   * @param _arrayNumberOfWinners array of number of winners per tier
+   * @param _arrayAmountOfWinning array of amount of winnings per player per tier
+   */
   function fillPrizeTiers(uint8[] _arrayNumberOfWinners, uint[] _arrayAmountOfWinning) external onlySpawner {
     require(prizeTiers.length != numberOfPrizeTiers, "prize tiers are already set");
     require(_arrayNumberOfWinners.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
@@ -124,6 +129,24 @@ contract Lottery is SafeMath {
       prizeTiers[i].numberOfWinners = _arrayNumberOfWinners[i];
       prizeTiers[i].amountOfWinning = _arrayAmountOfWinning[i];
     }
+  }
+
+  /**
+   * @notice Get number of winners per tier
+   * @param tier The index of the prize tier
+   * @return uint8
+   */
+  function numberOfWinnersPerTier(uint8 tier) public view returns(uint8) {
+    return prizeTiers[tier].numberOfWinners;
+  }
+
+  /**
+   * @notice Get amount of winning per player per tier
+   * @param tier The index of the prize tier
+   * @return uint
+   */
+  function amountOfWinningPerTier(uint8 tier) public view returns(uint) {
+    return prizeTiers[tier].amountOfWinning;
   }
 
   /**
