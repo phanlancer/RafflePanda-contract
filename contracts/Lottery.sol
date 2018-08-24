@@ -102,14 +102,10 @@ contract Lottery is SafeMath {
     spawner = msg.sender;
 
     require(_lotteryOwner != address(0), "should be valid address");
-    require(_lotteryAmount > 0 && _lotteryAmount <= MAX_LOTTERY_AMOUNT, "should be in a valid amount range");
-    require(_ticketCost > MIN_TICKET_COST && _ticketCost <= _lotteryAmount, "should be in a valid cost range");
-    require(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS, "should be more than 1, less than 100");
-
-    lotteryOwner = _lotteryOwner;
-    lotteryAmount = _lotteryAmount;
-    ticketCost = _ticketCost;
-    numberOfPrizeTiers = _numberOfPrizeTiers;
+    
+    if(_lotteryAmount > 0 && _lotteryAmount <= MAX_LOTTERY_AMOUNT) lotteryAmount = _lotteryAmount;
+    if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _lotteryAmount) ticketCost = _ticketCost;
+    if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
     // calculate number of tickets to be issued
     numberOfTickets = (lotteryAmount + ticketCost - 1) / ticketCost;
