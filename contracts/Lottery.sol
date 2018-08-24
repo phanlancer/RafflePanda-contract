@@ -116,6 +116,7 @@ contract Lottery is SafeMath {
   }
 
   function fillPrizeTiers(uint8[] _arrayNumberOfWinners, uint[] _arrayAmountOfWinning) external onlySpawner {
+    require(prizeTiers.length != numberOfPrizeTiers, "prize tiers are already set");
     require(_arrayNumberOfWinners.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
     require(_arrayAmountOfWinning.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
 
@@ -141,7 +142,7 @@ contract Lottery is SafeMath {
    * @notice To bet for a number by sending Ether
    * @param numberToBet The number that the player wants to bet for. Must be between 1 and 10 both inclusive
    */
-  function bet(uint numberToBet) external payable{
+  function buyTicket(uint numberToBet) external payable{
 
     // Check that the max amount of bets hasn't been met yet
     assert(totalBet < lotteryAmount);
