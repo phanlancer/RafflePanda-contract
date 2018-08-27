@@ -78,8 +78,10 @@ contract Lottery is SafeMath {
   event BuyTicket(uint _numberToBet, address holder);
   // event when draw winners per tier
   event DrawWinners(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
-  // event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning);
-  // event WithdrawToOwner(uint _withdrawal);
+  // event when transfer prize to a winner
+  event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
+  // event when withdraw raised funds to the lottery owner
+  event WithdrawToOwner(uint _total);
 
   /**
     * @dev Throws if called by any account other than the spawner.
@@ -214,7 +216,7 @@ contract Lottery is SafeMath {
       // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
       prizeTiers[i].winNumber = uint(cumulativeHash) % numberOfTickets + 1;
 
-      // emit event for draw winners
+      // emit event when draw winners per tier
       emit DrawWinners(prizeTiers[i].winNumber, prizeTiers[i].numberOfWinners, prizeTiers[i].amountOfWinning, i + 1);
     }
 
@@ -236,6 +238,8 @@ contract Lottery is SafeMath {
 
     // raised funds are sent to the lottery owner
     lotteryOwner.transfer(totalBet);
+    emit WithdrawToOwner(totalBet);
+    totalBet = 0;
     
     // after distribute prizes kill the contract
     selfdestruct(spawner);
