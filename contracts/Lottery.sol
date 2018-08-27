@@ -74,6 +74,7 @@ contract Lottery is SafeMath {
   mapping(uint => address[]) numberBetPlayers; // Each number has an array of players. Associate each number with a bunch of players
   mapping(address => uint) playerBetsNumber; // The number that each player has bet for
 
+  event BuyTicket(uint _numberToBet, address holder);
   // event DrawWinner(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
   // event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning);
   // event WithdrawToOwner(uint _withdrawal);
@@ -185,8 +186,14 @@ contract Lottery is SafeMath {
     // The player msg.sender has bet for that number
     numberBetPlayers[_numberToBet].push(msg.sender);
 
+    // counting on number of bets
     numberOfBets += 1;
+
+    // calculate total bet for this lottery
     totalBet = safeAdd(totalBet, ticketCost);
+
+    // emit event for BuyTicket
+    emit BuyTicket(_numberToBet, msg.sender);
 
     if(totalBet >= lotteryAmount) generateNumberWinner();
   }
