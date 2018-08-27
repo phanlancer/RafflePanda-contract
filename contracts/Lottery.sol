@@ -42,7 +42,7 @@ contract SafeMath {
  * @author phanlancer
  */
 contract Lottery is SafeMath {
-  address spawner;
+  address spawner; // who spawn the lottery contract. It's different from the lotteryOwner
 
   // Structure of prize tier for winners
   struct PrizeTier {
@@ -55,7 +55,7 @@ contract Lottery is SafeMath {
   }
 
   // Lottery parameters
-  address public lotteryOwner; // address to fund the raised money to
+  address public lotteryOwner; // address to fund the raised money to, who wanna raise the funds
   uint public lotteryAmount = 1 ether; // Default 1 ether. The total amount of the lottery
   uint public ticketCost = 200 finney; // Default 0.2 ether. The cost of the ticket
   uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
@@ -73,6 +73,10 @@ contract Lottery is SafeMath {
 
   mapping(uint => address[]) numberBetPlayers; // Each number has an array of players. Associate each number with a bunch of players
   mapping(address => uint) playerBetsNumber; // The number that each player has bet for
+
+  // event DrawWinner(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
+  // event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning);
+  // event WithdrawToOwner(uint _withdrawal);
 
   /**
     * @dev Throws if called by any account other than the spawner.
@@ -129,29 +133,29 @@ contract Lottery is SafeMath {
 
   /**
    * @notice Get number of winners per tier
-   * @param tier The index of the prize tier
+   * @param _tier The index of the prize tier
    * @return uint8
    */
-  function numberOfWinnersPerTier(uint8 tier) public view returns(uint8) {
-    return prizeTiers[tier].numberOfWinners;
+  function numberOfWinnersPerTier(uint8 _tier) public view returns(uint8) {
+    return prizeTiers[_tier].numberOfWinners;
   }
 
   /**
    * @notice Get amount of winning per player per tier
-   * @param tier The index of the prize tier
+   * @param _tier The index of the prize tier
    * @return uint
    */
-  function amountOfWinningPerTier(uint8 tier) public view returns(uint) {
-    return prizeTiers[tier].amountOfWinning;
+  function amountOfWinningPerTier(uint8 _tier) public view returns(uint) {
+    return prizeTiers[_tier].amountOfWinning;
   }
 
   /**
    * @notice Check if a player exists in the current game
-   * @param player The address of the player to check
+   * @param _player The address of the player to check
    * @return bool Returns true is it exists or false if it doesn't
    */
-  function checkPlayerExists(address player) public view returns(bool) {
-    if(playerBetsNumber[player] > 0)
+  function checkPlayerExists(address _player) public view returns(bool) {
+    if(playerBetsNumber[_player] > 0)
       return true;
     else
       return false;
@@ -159,9 +163,9 @@ contract Lottery is SafeMath {
 
   /**
    * @notice To bet for a number by sending Ether
-   * @param numberToBet The number that the player wants to bet for. Must be between 1 and numberOfTickets both inclusive
+   * @param _numberToBet The number that the player wants to bet for. Must be between 1 and numberOfTickets both inclusive
    */
-  function buyTicket(uint numberToBet) external payable{
+  function buyTicket(uint _numberToBet) external payable{
 
     // Check that the max amount of bets hasn't been met yet
     assert(totalBet < lotteryAmount);
@@ -170,16 +174,16 @@ contract Lottery is SafeMath {
     assert(checkPlayerExists(msg.sender) == false);
 
     // Check that the number to bet is within the range
-    assert(numberToBet >= 1 && numberToBet <= numberOfTickets);
+    assert(_numberToBet >= 1 && _numberToBet <= numberOfTickets);
 
     // Check if ticket cost is correct
     assert(ticketCost == msg.value);
 
     // Set the number bet for that player
-    playerBetsNumber[msg.sender] = numberToBet;
+    playerBetsNumber[msg.sender] = _numberToBet;
 
     // The player msg.sender has bet for that number
-    numberBetPlayers[numberToBet].push(msg.sender);
+    numberBetPlayers[_numberToBet].push(msg.sender);
 
     numberOfBets += 1;
     totalBet = safeAdd(totalBet, ticketCost);
