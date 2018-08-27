@@ -74,8 +74,10 @@ contract Lottery is SafeMath {
   mapping(uint => address[]) numberBetPlayers; // Each number has an array of players. Associate each number with a bunch of players
   mapping(address => uint) playerBetsNumber; // The number that each player has bet for
 
+  // event when buy a ticket
   event BuyTicket(uint _numberToBet, address holder);
-  // event DrawWinner(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
+  // event when draw winners per tier
+  event DrawWinners(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
   // event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning);
   // event WithdrawToOwner(uint _withdrawal);
 
@@ -192,16 +194,16 @@ contract Lottery is SafeMath {
     // calculate total bet for this lottery
     totalBet = safeAdd(totalBet, ticketCost);
 
-    // emit event for BuyTicket
+    // emit event when buy a ticket
     emit BuyTicket(_numberToBet, msg.sender);
 
-    if(totalBet >= lotteryAmount) generateNumberWinner();
+    if(totalBet >= lotteryAmount) drawWinners();
   }
 
   /**
    * @notice Generates a random number between 1 and numberOfTickets both inclusive.
    */
-  function generateNumberWinner() private onEndGame isFilledPrizeTiers {
+  function drawWinners() private onEndGame isFilledPrizeTiers {
     // cumulativeHash will be used to generate random numbers
     bytes32 cumulativeHash = keccak256(abi.encodePacked(block.difficulty, block.timestamp));
 
@@ -211,6 +213,9 @@ contract Lottery is SafeMath {
 
       // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
       prizeTiers[i].winNumber = uint(cumulativeHash) % numberOfTickets + 1;
+
+      // emit event for draw winners
+      emit DrawWinners(prizeTiers[i].winNumber, prizeTiers[i].numberOfWinners, prizeTiers[i].amountOfWinning, i + 1);
     }
 
     distributePrizes();
