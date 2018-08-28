@@ -75,7 +75,7 @@ contract Lottery is SafeMath {
   mapping(address => uint) playerBetsNumber; // The number that each player has bet for
 
   // event when buy a ticket
-  event BuyTicket(uint _numberToBet, address holder);
+  event BuyTicket(uint _numberToBet, address _holder);
   // event when draw winners per tier
   event DrawWinners(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
   // event when transfer prize to a winner
