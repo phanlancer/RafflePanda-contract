@@ -236,7 +236,7 @@ contract Lottery is SafeMath {
       }
     }
 
-    // raised funds are sent to the lottery owner
+    // raised funds are sent to the lottery owner(fundraiser)
     lotteryOwner.transfer(totalBet);
     emit WithdrawToOwner(totalBet);
     totalBet = 0;
