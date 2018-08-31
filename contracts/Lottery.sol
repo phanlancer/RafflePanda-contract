@@ -173,16 +173,16 @@ contract Lottery is SafeMath {
   function buyTicket(uint _numberToBet) external payable{
 
     // Check that the max amount of bets hasn't been met yet
-    assert(totalBet < lotteryAmount);
+    require(totalBet < lotteryAmount, "lottery amount is reached");
 
     // Check that the player doesn't exists
-    assert(checkPlayerExists(msg.sender) == false);
+    require(checkPlayerExists(msg.sender) == false, "you've already bought a ticket");
 
     // Check that the number to bet is within the range
-    assert(_numberToBet >= 1 && _numberToBet <= numberOfTickets);
+    require(_numberToBet >= 1 && _numberToBet <= numberOfTickets, "the number is not within the range");
 
     // Check if ticket cost is correct
-    assert(ticketCost == msg.value);
+    require(ticketCost == msg.value, "ticket cost is not correct");
 
     // Set the number bet for that player
     playerBetsNumber[msg.sender] = _numberToBet;
