@@ -199,18 +199,37 @@ contract Lottery is SafeMath {
   }
 
   /**
+   @notice check if random number is duplicated
+   */
+  function checkDupRandom(uint rand) private view returns(bool) {
+    for(uint8 i = numberOfPrizeTiers - 1; i >= 0; i--) {
+      for(uint8 j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        if(prizeTiers[i].winNumbers[j] == uint(0)) break;
+
+        if(prizeTiers[i].winNumbers[j] == rand) return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * @notice Generates a random number between 1 and numberOfTickets both inclusive.
    */
   function drawWinners() private onEndGame isFilledPrizeTiers {
     // cumulativeHash will be used to generate random numbers
     bytes32 baseHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
+    uint randomNumber = uint(baseHash) % numberOfTickets + 1;
 
     for(uint8 i = numberOfPrizeTiers - 1; i >= 0; i--) {
       for(uint8 j = 0; j < prizeTiers[i].numberOfWinners; j++) {
-        // update hash for random
-        baseHash = keccak256(abi.encodePacked(blockhash(block.number - i * numberOfPrizeTiers - j - 1), baseHash));
-        // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
-        prizeTiers[i].winNumbers[j] = uint(baseHash) % numberOfTickets + 1;
+        // make sure the win number is not duplicated for different tiers
+        while(checkDupRandom(randomNumber)) {
+          // update hash for random
+          baseHash = keccak256(abi.encodePacked(blockhash(block.number - i * numberOfPrizeTiers - j - 1), baseHash));
+          // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
+          randomNumber = uint(baseHash) % numberOfTickets + 1;
+        }
+        prizeTiers[i].winNumbers[j] = randomNumber;
         // emit event when draw winners per tier
         emit DrawWinners(prizeTiers[i].winNumbers[j], prizeTiers[i].amountOfWinning, i + 1);
       }
@@ -226,8 +245,8 @@ contract Lottery is SafeMath {
   function distributePrizes() private onEndGame isFilledPrizeTiers {
     // Loop through all the winners to send the corresponding prize for each one
     for(uint8 i = 0; i < numberOfPrizeTiers; i++) {
-      for(uint j = 0; j < numberBetPlayers[prizeTiers[i].winNumber].length; j++) {
-        numberBetPlayers[prizeTiers[i].winNumber][j].transfer(prizeTiers[i].amountOfWinning);
+      for(uint j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        numberBetPlayers[prizeTiers[i].winNumbers[j]].transfer(prizeTiers[i].amountOfWinning);
         totalBet = safeSub(totalBet, prizeTiers[i].amountOfWinning);
       }
     }
