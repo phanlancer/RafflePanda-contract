@@ -47,7 +47,7 @@ contract Lottery is SafeMath {
   // Structure of prize tier for winners
   struct PrizeTier {
     // winning number - your lucky
-    uint winNumber;
+    uint[] winNumbers;
     // number of winners for the prize tier
     uint8 numberOfWinners;
     // amount of the winnings per user per tier
@@ -81,7 +81,7 @@ contract Lottery is SafeMath {
   // event when buy a ticket
   event BuyTicket(uint _numberToBet, address _holder, uint _count);
   // event when draw winners per tier
-  event DrawWinners(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
+  event DrawWinners(uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
   // event when transfer prize to a winner
   event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
   // event when withdraw raised funds to the lottery owner
@@ -137,8 +137,11 @@ contract Lottery is SafeMath {
     require(_arrayAmountOfWinning.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
 
     for(uint8 i = 0; i < numberOfPrizeTiers; i++) {
-      prizeTiers[i].numberOfWinners = _arrayNumberOfWinners[i];
-      prizeTiers[i].amountOfWinning = _arrayAmountOfWinning[i];
+      prizeTiers.push(PrizeTier({
+        winNumbers: new uint[](_arrayNumberOfWinners[i]),
+        numberOfWinners: _arrayNumberOfWinners[i],
+        amountOfWinning: _arrayAmountOfWinning[i]
+      }));
     }
   }
 
@@ -173,12 +176,10 @@ contract Lottery is SafeMath {
     uint i = 0;
     for (i = 0; i < _count; i++) {
       currentTicket ++;
-
       // Set the number bet for that player
       playerBetsNumber[msg.sender] = currentTicket;
       // The player msg.sender has bet for that number
       numberBetPlayers[currentTicket] = msg.sender;
-
       // calculate total bet for this lottery
       totalBet = safeAdd(totalBet, ticketCost);
       
@@ -205,14 +206,14 @@ contract Lottery is SafeMath {
     bytes32 baseHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
 
     for(uint8 i = numberOfPrizeTiers - 1; i >= 0; i--) {
-      // update hash for random
-      baseHash = keccak256(abi.encodePacked(blockhash(block.number - i - 1), baseHash));
-
-      // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
-      prizeTiers[i].winNumber = uint(baseHash) % numberOfTickets + 1;
-
-      // emit event when draw winners per tier
-      emit DrawWinners(prizeTiers[i].winNumber, prizeTiers[i].numberOfWinners, prizeTiers[i].amountOfWinning, i + 1);
+      for(uint8 j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        // update hash for random
+        baseHash = keccak256(abi.encodePacked(blockhash(block.number - i * numberOfPrizeTiers - j - 1), baseHash));
+        // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
+        prizeTiers[i].winNumbers[j] = uint(baseHash) % numberOfTickets + 1;
+        // emit event when draw winners per tier
+        emit DrawWinners(prizeTiers[i].winNumbers[j], prizeTiers[i].amountOfWinning, i + 1);
+      }
     }
 
     distributePrizes();
