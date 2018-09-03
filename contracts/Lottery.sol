@@ -57,7 +57,7 @@ contract Lottery is SafeMath {
   // Lottery parameters
   address public lotteryOwner; // address to fund the raised money to, who wanna raise the funds
   uint public lotteryAmount = 1 ether; // Default 1 ether. The total amount of the lottery
-  uint public ticketCost = 200 finney; // Default 0.2 ether. The cost of the ticket
+  uint public ticketCost = 20 finney; // Default 0.02 ether. The cost of the ticket
   uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
   PrizeTier[] public prizeTiers; // Prize tiers
 
