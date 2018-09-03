@@ -67,15 +67,19 @@ contract Lottery is SafeMath {
   uint private constant MAX_NUMBER_PRIZE_TIERS = 100; // Maximum number of prize tiers
 
   // Lottery variables
-  uint public totalBet; // The total amount of Ether raised for this current lottery
-  uint public numberOfBets; // The total number of tickets bought by players
+  uint public currentTicket = 0;
+  uint public totalBet = 0; // The total amount of Ether raised for this current lottery
   uint public numberOfTickets; // = lotteryAmount / ticketCost
 
-  mapping(uint => address[]) numberBetPlayers; // Each number has an array of players. Associate each number with a bunch of players
+  // For Random generation
+  uint private latestBlockNumber;
+  bytes32 private cumulativeHash;
+
+  mapping(uint => address) numberBetPlayers; // Each number has a player.
   mapping(address => uint) playerBetsNumber; // The number that each player has bet for
 
   // event when buy a ticket
-  event BuyTicket(uint _numberToBet, address _holder);
+  event BuyTicket(uint _numberToBet, address _holder, uint _count);
   // event when draw winners per tier
   event DrawWinners(uint _winNumber, uint8 _numberOfWinners, uint _amountOfWinning, uint8 _prizeTier);
   // event when transfer prize to a winner
@@ -116,6 +120,8 @@ contract Lottery is SafeMath {
     if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _lotteryAmount) ticketCost = _ticketCost;
     if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
+    latestBlockNumber = block.number;
+    cumulativeHash = bytes32(0);
     // calculate number of tickets to be issued
     numberOfTickets = (lotteryAmount + ticketCost - 1) / ticketCost;
   }
@@ -155,51 +161,40 @@ contract Lottery is SafeMath {
   }
 
   /**
-   * @notice Check if a player exists in the current game
-   * @param _player The address of the player to check
-   * @return bool Returns true is it exists or false if it doesn't
+   * @notice Buy bulk tickets at once
+   * @param _count Count of bulk tickets
    */
-  function checkPlayerExists(address _player) public view returns(bool) {
-    if(playerBetsNumber[_player] > 0)
-      return true;
-    else
-      return false;
-  }
-
-  /**
-   * @notice To bet for a number by sending Ether
-   * @param _numberToBet The number that the player wants to bet for. Must be between 1 and numberOfTickets both inclusive
-   */
-  function buyTicket(uint _numberToBet) external payable{
-
+  function buyBulkTickets(uint _count) external payable {
     // Check that the max amount of bets hasn't been met yet
     require(totalBet < lotteryAmount, "lottery amount is reached");
-
-    // Check that the player doesn't exists
-    require(checkPlayerExists(msg.sender) == false, "you've already bought a ticket");
-
-    // Check that the number to bet is within the range
-    require(_numberToBet >= 1 && _numberToBet <= numberOfTickets, "the number is not within the range");
-
     // Check if ticket cost is correct
-    require(ticketCost == msg.value, "ticket cost is not correct");
+    require(msg.value == ticketCost * _count, "ticket cost is not correct");
+    
+    uint i = 0;
+    for (i = 0; i < _count; i++) {
+      currentTicket ++;
 
-    // Set the number bet for that player
-    playerBetsNumber[msg.sender] = _numberToBet;
+      // Set the number bet for that player
+      playerBetsNumber[msg.sender] = currentTicket;
+      // The player msg.sender has bet for that number
+      numberBetPlayers[currentTicket] = msg.sender;
 
-    // The player msg.sender has bet for that number
-    numberBetPlayers[_numberToBet].push(msg.sender);
-
-    // counting on number of bets
-    numberOfBets += 1;
-
-    // calculate total bet for this lottery
-    totalBet = safeAdd(totalBet, ticketCost);
-
-    // emit event when buy a ticket
-    emit BuyTicket(_numberToBet, msg.sender);
-
-    if(totalBet >= lotteryAmount) drawWinners();
+      // calculate total bet for this lottery
+      totalBet = safeAdd(totalBet, ticketCost);
+      
+      if (totalBet >= lotteryAmount) {
+        break;
+      }
+      
+      cumulativeHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
+      latestBlockNumber = block.number;
+    }
+    
+    if (totalBet >= lotteryAmount) {
+      drawWinners();
+    }
+    
+    emit BuyTicket(currentTicket, msg.sender, i + 1);
   }
 
   /**
@@ -207,14 +202,14 @@ contract Lottery is SafeMath {
    */
   function drawWinners() private onEndGame isFilledPrizeTiers {
     // cumulativeHash will be used to generate random numbers
-    bytes32 cumulativeHash = keccak256(abi.encodePacked(block.difficulty, block.timestamp));
+    bytes32 baseHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
 
     for(uint8 i = numberOfPrizeTiers - 1; i >= 0; i--) {
       // update hash for random
-      cumulativeHash = keccak256(abi.encodePacked(blockhash(block.number - i), cumulativeHash));
+      baseHash = keccak256(abi.encodePacked(blockhash(block.number - i - 1), baseHash));
 
       // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
-      prizeTiers[i].winNumber = uint(cumulativeHash) % numberOfTickets + 1;
+      prizeTiers[i].winNumber = uint(baseHash) % numberOfTickets + 1;
 
       // emit event when draw winners per tier
       emit DrawWinners(prizeTiers[i].winNumber, prizeTiers[i].numberOfWinners, prizeTiers[i].amountOfWinning, i + 1);
@@ -225,7 +220,7 @@ contract Lottery is SafeMath {
 
   /**
    * @notice Sends the corresponding Ether to each winner then deletes all the
-   * players for the next game and resets the `totalBet` and `numberOfBets`
+   * players for the next game and resets the `totalBet` and `currentTicket`
    */
   function distributePrizes() private onEndGame isFilledPrizeTiers {
     // Loop through all the winners to send the corresponding prize for each one
@@ -240,6 +235,7 @@ contract Lottery is SafeMath {
     lotteryOwner.transfer(totalBet);
     emit WithdrawToOwner(totalBet);
     totalBet = 0;
+    currentTicket = 0;
     
     // after distribute prizes kill the contract
     selfdestruct(spawner);
