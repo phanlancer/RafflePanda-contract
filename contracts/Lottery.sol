@@ -172,7 +172,7 @@ contract Lottery is SafeMath {
    */
   function buyBulkTickets(uint _count) external payable {
     // Check that the max amount of bets hasn't been met yet
-    require(totalBet < lotteryAmount, "lottery amount is reached");
+    require(currentTicket < numberOfTickets, "lottery amount is reached");
     // Check if ticket cost is correct
     require(msg.value == ticketCost * _count, "ticket cost is not correct");
     
@@ -186,7 +186,7 @@ contract Lottery is SafeMath {
       // calculate total bet for this lottery
       totalBet = safeAdd(totalBet, ticketCost);
       
-      if (totalBet >= lotteryAmount) {
+      if (currentTicket >= numberOfTickets) {
         break;
       }
       
@@ -194,7 +194,7 @@ contract Lottery is SafeMath {
       latestBlockNumber = block.number;
     }
     
-    if (totalBet >= lotteryAmount) {
+    if (currentTicket >= numberOfTickets) {
       drawWinners();
     }
     
