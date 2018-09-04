@@ -122,10 +122,11 @@ contract Raffle is SafeMath {
     if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _raffleAmount) ticketCost = _ticketCost;
     if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
-    feePercentage = _feePercentage;
     latestBlockNumber = block.number;
     cumulativeHash = bytes32(0);
-    // calculate number of tickets to be issued
+
+    feePercentage = _feePercentage;
+    raffleOwner = _raffleOwner;
     numberOfTickets = (raffleAmount + ticketCost - 1) / ticketCost;
   }
 
@@ -269,6 +270,10 @@ contract Raffle is SafeMath {
     currentTicket = 0;
     
     // after distribute prizes kill the contract
+    selfdestruct(spawner);
+  }
+
+  function kill() public onlySpawner {
     selfdestruct(spawner);
   }
 }
