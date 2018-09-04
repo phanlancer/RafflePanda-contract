@@ -41,8 +41,8 @@ contract SafeMath {
  * @title Contract to bet Ether for a number and win randomly when the number of bets is met.
  * @author phanlancer
  */
-contract Lottery is SafeMath {
-  address spawner; // who spawn the lottery contract. It's different from the lotteryOwner
+contract Raffle is SafeMath {
+  address spawner; // who spawn the Raffle contract. It's different from the RaffleOwner
 
   // Structure of prize tier for winners
   struct PrizeTier {
@@ -54,23 +54,23 @@ contract Lottery is SafeMath {
     uint amountOfWinning;
   }
 
-  // Lottery parameters
-  address public lotteryOwner; // address to fund the raised money to, who wanna raise the funds
-  uint public lotteryAmount = 1 ether; // Default 1 ether. The total amount of the lottery
+  // Raffle parameters
+  address public raffleOwner; // address to fund the raised money to, who wanna raise the funds
+  uint public raffleAmount = 1 ether; // Default 1 ether. The total amount of the raffle
   uint public ticketCost = 20 finney; // Default 0.02 ether. The cost of the ticket
   uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
   PrizeTier[] public prizeTiers; // Prize tiers
   uint public feePercentage;
 
-  // Lottery limitation
+  // Raffle limitation
   uint private constant MIN_TICKET_COST = 10 finney; // Minimum ticket cost is 0.01 ether
-  uint private constant MAX_LOTTERY_AMOUNT = 1000 ether; // Maximum amount of ether which this lottery can raise
+  uint private constant MAX_RAFFLE_AMOUNT = 1000 ether; // Maximum amount of ether which this raffle can raise
   uint private constant MAX_NUMBER_PRIZE_TIERS = 100; // Maximum number of prize tiers
 
-  // Lottery variables
+  // Raffle variables
   uint public currentTicket = 0;
-  uint public totalBet = 0; // The total amount of Ether raised for this current lottery
-  uint public numberOfTickets; // = lotteryAmount / ticketCost
+  uint public totalBet = 0; // The total amount of Ether raised for this current raffle
+  uint public numberOfTickets; // = raffleAmount / ticketCost
 
   // For Random generation
   uint private latestBlockNumber;
@@ -85,7 +85,7 @@ contract Lottery is SafeMath {
   event DrawWinners(uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
   // event when transfer prize to a winner
   event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
-  // event when withdraw raised funds to the lottery owner
+  // event when withdraw raised funds to the raffle owner
   event WithdrawToOwner(uint _total);
 
   /**
@@ -103,30 +103,30 @@ contract Lottery is SafeMath {
   
   // Modifier to only allow the execution of functions when the bets are completed
   modifier onEndGame() {
-    if(totalBet >= lotteryAmount) _;
+    if(totalBet >= raffleAmount) _;
   }
 
   /**
    * @notice Constructor that's used to configure the minimum bet per game and the max amount of bets
-   * @param _lotteryAmount The total amount of the lottery
+   * @param _raffleAmount The total amount of the raffle
    * @param _ticketCost The cost of the ticket
    * @param _numberOfPrizeTiers Number of prize tiers
    */
-  constructor(address _lotteryOwner, uint _feePercentage, uint _lotteryAmount, uint _ticketCost, uint8 _numberOfPrizeTiers) public {
+  constructor(address _raffleOwner, uint _feePercentage, uint _raffleAmount, uint _ticketCost, uint8 _numberOfPrizeTiers) public {
     spawner = msg.sender;
 
-    require(_lotteryOwner != address(0), "should be valid address");
+    require(_raffleOwner != address(0), "should be valid address");
     require(_feePercentage < 100, "fee should be less than 100 %");
 
-    if(_lotteryAmount > 0 && _lotteryAmount <= MAX_LOTTERY_AMOUNT) lotteryAmount = _lotteryAmount;
-    if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _lotteryAmount) ticketCost = _ticketCost;
+    if(_raffleAmount > 0 && _raffleAmount <= MAX_RAFFLE_AMOUNT) raffleAmount = _raffleAmount;
+    if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _raffleAmount) ticketCost = _ticketCost;
     if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
     feePercentage = _feePercentage;
     latestBlockNumber = block.number;
     cumulativeHash = bytes32(0);
     // calculate number of tickets to be issued
-    numberOfTickets = (lotteryAmount + ticketCost - 1) / ticketCost;
+    numberOfTickets = (raffleAmount + ticketCost - 1) / ticketCost;
   }
 
   /**
@@ -172,7 +172,7 @@ contract Lottery is SafeMath {
    */
   function buyBulkTickets(uint _count) external payable {
     // Check that the max amount of bets hasn't been met yet
-    require(currentTicket < numberOfTickets, "lottery amount is reached");
+    require(currentTicket < numberOfTickets, "raffle amount is reached");
     // Check if ticket cost is correct
     require(msg.value == ticketCost * _count, "ticket cost is not correct");
     
@@ -183,7 +183,7 @@ contract Lottery is SafeMath {
       playerBetsNumber[msg.sender] = currentTicket;
       // The player msg.sender has bet for that number
       numberBetPlayers[currentTicket] = msg.sender;
-      // calculate total bet for this lottery
+      // calculate total bet for this raffle
       totalBet = safeAdd(totalBet, ticketCost);
       
       if (currentTicket >= numberOfTickets) {
@@ -262,8 +262,8 @@ contract Lottery is SafeMath {
       }
     }
 
-    // raised funds are sent to the lottery owner(fundraiser)
-    lotteryOwner.transfer(totalBet);
+    // raised funds are sent to the raffle owner(fundraiser)
+    raffleOwner.transfer(totalBet);
     emit WithdrawToOwner(totalBet);
     totalBet = 0;
     currentTicket = 0;
