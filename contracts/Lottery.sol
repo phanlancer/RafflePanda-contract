@@ -60,6 +60,7 @@ contract Lottery is SafeMath {
   uint public ticketCost = 20 finney; // Default 0.02 ether. The cost of the ticket
   uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
   PrizeTier[] public prizeTiers; // Prize tiers
+  uint public feePercentage;
 
   // Lottery limitation
   uint private constant MIN_TICKET_COST = 10 finney; // Minimum ticket cost is 0.01 ether
@@ -111,15 +112,17 @@ contract Lottery is SafeMath {
    * @param _ticketCost The cost of the ticket
    * @param _numberOfPrizeTiers Number of prize tiers
    */
-  constructor(address _lotteryOwner, uint _lotteryAmount, uint _ticketCost, uint8 _numberOfPrizeTiers) public {
+  constructor(address _lotteryOwner, uint _feePercentage, uint _lotteryAmount, uint _ticketCost, uint8 _numberOfPrizeTiers) public {
     spawner = msg.sender;
 
     require(_lotteryOwner != address(0), "should be valid address");
-    
+    require(_feePercentage < 100, "fee should be less than 100 %");
+
     if(_lotteryAmount > 0 && _lotteryAmount <= MAX_LOTTERY_AMOUNT) lotteryAmount = _lotteryAmount;
     if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _lotteryAmount) ticketCost = _ticketCost;
     if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
+    feePercentage = _feePercentage;
     latestBlockNumber = block.number;
     cumulativeHash = bytes32(0);
     // calculate number of tickets to be issued
@@ -243,6 +246,14 @@ contract Lottery is SafeMath {
    * players for the next game and resets the `totalBet` and `currentTicket`
    */
   function distributePrizes() private onEndGame isFilledPrizeTiers {
+    // pay fee to WBT company
+    if(feePercentage > 0) {
+      uint fee = safeDiv(safeMul(totalBet, 100), feePercentage);
+      feePercentage = 0;
+      spawner.transfer(fee);
+      totalBet = safeSub(totalBet, fee);
+    }
+
     // Loop through all the winners to send the corresponding prize for each one
     for(uint8 i = 0; i < numberOfPrizeTiers; i++) {
       for(uint j = 0; j < prizeTiers[i].numberOfWinners; j++) {
@@ -258,13 +269,6 @@ contract Lottery is SafeMath {
     currentTicket = 0;
     
     // after distribute prizes kill the contract
-    selfdestruct(spawner);
-  }
-
-  /**
-   * @notice kill this contract whenever you want
-   */
-  function kill() public onlySpawner {
     selfdestruct(spawner);
   }
 }
