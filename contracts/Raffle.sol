@@ -77,7 +77,6 @@ contract Raffle is SafeMath {
   bytes32 private cumulativeHash;
 
   mapping(uint => address) numberBetPlayers; // Each number has a player.
-  mapping(address => uint) playerBetsNumber; // The number that each player has bet for
 
   // event when buy a ticket
   event BuyTicket(uint _numberToBet, address _holder, uint _count);
@@ -180,8 +179,6 @@ contract Raffle is SafeMath {
     uint i = 0;
     for (i = 0; i < _count; i++) {
       currentTicket ++;
-      // Set the number bet for that player
-      playerBetsNumber[msg.sender] = currentTicket;
       // The player msg.sender has bet for that number
       numberBetPlayers[currentTicket] = msg.sender;
       // calculate total bet for this raffle
@@ -199,7 +196,7 @@ contract Raffle is SafeMath {
       drawWinners();
     }
     
-    emit BuyTicket(currentTicket, msg.sender, i + 1);
+    emit BuyTicket(currentTicket, msg.sender, i);
   }
 
   /**
@@ -227,12 +224,12 @@ contract Raffle is SafeMath {
     for(uint8 i = numberOfPrizeTiers - 1; i >= 0; i--) {
       for(uint8 j = 0; j < prizeTiers[i].numberOfWinners; j++) {
         // make sure the win number is not duplicated for different tiers
-        while(checkDupRandom(randomNumber)) {
-          // update hash for random
-          baseHash = keccak256(abi.encodePacked(blockhash(block.number - i * numberOfPrizeTiers - j - 1), baseHash));
-          // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
-          randomNumber = uint(baseHash) % numberOfTickets + 1;
-        }
+        // while(checkDupRandom(randomNumber)) {
+        // update hash for random
+        baseHash = keccak256(abi.encodePacked(blockhash(block.number - i * numberOfPrizeTiers - j - 1), baseHash));
+        // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
+        randomNumber = uint(baseHash) % numberOfTickets + 1;
+        // }
         prizeTiers[i].winNumbers[j] = randomNumber;
         // emit event when draw winners per tier
         emit DrawWinners(prizeTiers[i].winNumbers[j], prizeTiers[i].amountOfWinning, i + 1);
@@ -270,7 +267,7 @@ contract Raffle is SafeMath {
     currentTicket = 0;
     
     // after distribute prizes kill the contract
-    selfdestruct(spawner);
+    // selfdestruct(spawner);
   }
 
   function kill() public onlySpawner {
