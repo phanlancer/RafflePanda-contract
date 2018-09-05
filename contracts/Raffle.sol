@@ -207,6 +207,7 @@ contract Raffle is SafeMath {
     uint8 j;
     for(i = 0; i < numberOfPrizeTiers; i--) {
       for(j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        // doing for in the same sequence as drawwinners, so if it meets first empty value, it's okay to return false
         if(prizeTiers[i].winNumbers[j] == uint(0)) return false;
 
         if(prizeTiers[i].winNumbers[j] == rand) return true;
@@ -250,7 +251,8 @@ contract Raffle is SafeMath {
   function distributePrizes() private onEndGame isFilledPrizeTiers {
     // pay fee to WBT company
     if(feePercentage > 0) {
-      uint fee = safeDiv(safeMul(totalBet, 100), feePercentage);
+      uint fee;
+      fee = safeDiv(safeMul(totalBet, feePercentage), 100);
       feePercentage = 0;
       spawner.transfer(fee);
       totalBet = safeSub(totalBet, fee);
