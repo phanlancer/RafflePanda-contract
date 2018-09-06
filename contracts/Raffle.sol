@@ -149,24 +149,6 @@ contract Raffle is SafeMath {
   }
 
   /**
-   * @notice Get number of winners per tier
-   * @param _tier The index of the prize tier
-   * @return uint8
-   */
-  function numberOfWinnersPerTier(uint8 _tier) public view returns(uint8) {
-    return prizeTiers[_tier].numberOfWinners;
-  }
-
-  /**
-   * @notice Get amount of winning per player per tier
-   * @param _tier The index of the prize tier
-   * @return uint
-   */
-  function amountOfWinningPerTier(uint8 _tier) public view returns(uint) {
-    return prizeTiers[_tier].amountOfWinning;
-  }
-
-  /**
    * @notice Buy bulk tickets at once
    * @param _count Count of bulk tickets
    */
