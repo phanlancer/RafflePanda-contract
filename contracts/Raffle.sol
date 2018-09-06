@@ -42,7 +42,7 @@ contract SafeMath {
  * @author phanlancer
  */
 contract Raffle is SafeMath {
-  address spawner; // who spawn the Raffle contract. It's different from the Raffle Owner
+  address spawner; // (WBT company) who spawn the Raffle contract. It's different from the Raffle Owner
 
   // Structure of prize tier for winners
   struct PrizeTier {
@@ -86,6 +86,8 @@ contract Raffle is SafeMath {
   event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
   // event when withdraw raised funds to the raffle owner
   event WithdrawToOwner(uint _total);
+  // distribute prize to winners
+  event WithdrawFeeToSpawner(uint _fee);
 
   /**
     * @dev Throws if called by any account other than the spawner.
@@ -238,6 +240,9 @@ contract Raffle is SafeMath {
       feePercentage = 0;
       spawner.transfer(fee);
       totalBet = safeSub(totalBet, fee);
+
+      // event log when withdraw fees to the contract spawner
+      emit WithdrawFeeToSpawner(fee);
     }
 
     // Loop through all the winners to send the corresponding prize for each one
@@ -245,8 +250,11 @@ contract Raffle is SafeMath {
     uint8 j;
     for(i = 0; i < numberOfPrizeTiers; i++) {
       for(j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        // withdraw prize to winner's address
         numberBetPlayers[prizeTiers[i].winNumbers[j]].transfer(prizeTiers[i].amountOfWinning);
         totalBet = safeSub(totalBet, prizeTiers[i].amountOfWinning);
+        // event log when withdraw the prize to a winner
+        emit WithdrawToWinner(numberBetPlayers[prizeTiers[i].winNumbers[j]], prizeTiers[i].winNumbers[j], prizeTiers[i].amountOfWinning, i + 1);
       }
     }
 
