@@ -42,7 +42,7 @@ contract SafeMath {
  * @author phanlancer
  */
 contract Raffle is SafeMath {
-  address spawner; // who spawn the Raffle contract. It's different from the RaffleOwner
+  address spawner; // who spawn the Raffle contract. It's different from the Raffle Owner
 
   // Structure of prize tier for winners
   struct PrizeTier {
@@ -273,11 +273,14 @@ contract Raffle is SafeMath {
     emit WithdrawToOwner(totalBet);
     totalBet = 0;
     currentTicket = 0;
-    
+
     // after distribute prizes kill the contract
-    // selfdestruct(spawner);
+    selfdestruct(spawner);
   }
 
+  /**
+   * @notice kill this contract whenever you want
+   */
   function kill() public onlySpawner {
     selfdestruct(spawner);
   }
