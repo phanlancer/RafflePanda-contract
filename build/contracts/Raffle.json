@@ -1,5 +1,5 @@
 {
-  "contract_name": "Lottery",
+  "contract_name": "Raffle",
   "abi": [
     {
       "constant": false,

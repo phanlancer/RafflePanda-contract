@@ -1,2 +1,2 @@
-# WBT-Lottery
-This is a lottery which will be spawned by lottery maker.
+# WBT-Raffle
+This is a raffle which will be spawned by WBT company.
