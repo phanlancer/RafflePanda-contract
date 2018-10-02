@@ -42,7 +42,7 @@ contract SafeMath {
  * @author phanlancer
  */
 contract Raffle is SafeMath {
-  address spawner; // (WBT company) who spawn the Raffle contract. It's different from the Raffle Owner
+  address spawner; // (RafflePanda company) who spawn the Raffle contract. It's different from the Raffle Owner
 
   // Structure of prize tier for winners
   struct PrizeTier {
@@ -233,7 +233,7 @@ contract Raffle is SafeMath {
    * players for the next game and resets the `totalBet` and `currentTicket`
    */
   function distributePrizes() private onEndGame isFilledPrizeTiers {
-    // pay fee to WBT company
+    // pay fee to RafflePanda company
     if(feePercentage > 0) {
       uint fee;
       fee = safeDiv(safeMul(totalBet, feePercentage), 100);
