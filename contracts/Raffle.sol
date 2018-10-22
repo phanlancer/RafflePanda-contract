@@ -163,7 +163,7 @@ contract Raffle is SafeMath {
     uint i = 0;
     for (i = 0; i < _count; i++) {
       currentTicket ++;
-      // The player msg.sender has bet for that number
+      // The player msg.sender has bet for this number 'currentTicket'
       numberBetPlayers[currentTicket] = msg.sender;
       // calculate total bet for this raffle
       totalBet = safeAdd(totalBet, ticketCost);
