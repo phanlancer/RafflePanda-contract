@@ -25,5 +25,8 @@
     "truffle": "^4.1.14",
     "web3": "^0.20.0",
     "webpack": "^3.5.4"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11"
   }
 }
