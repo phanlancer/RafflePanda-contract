@@ -90,8 +90,8 @@ contract Raffle is SafeMath {
     event WithdrawFeeToSpawner(uint _fee);
 
     /**
-        * @dev Throws if called by any account other than the spawner.
-        */
+    * @dev Throws if called by any account other than the spawner.
+    */
     modifier onlySpawner() {
         require(msg.sender == spawner, "should be spawner");
         _;
