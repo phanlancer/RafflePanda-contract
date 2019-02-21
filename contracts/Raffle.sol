@@ -57,7 +57,7 @@ contract Raffle is SafeMath {
     // Raffle parameters
     address public raffleOwner; // address to fund the raised money to, who wanna raise the funds
     uint public totalAmount = 1 ether; // Default 1 ether. The total amount of the raffle
-    uint public ticketCost = 20 finney; // Default 0.02 ether. The cost of the ticket
+    uint public ticketPrice = 20 finney; // Default 0.02 ether. The cost of the ticket
     uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
     PrizeTier[] public prizeTiers; // Prize tiers
     uint public feePercentage;
@@ -70,7 +70,7 @@ contract Raffle is SafeMath {
     // Raffle variables
     uint public currentTicket = 0;
     uint public totalBet = 0; // The total amount of Ether raised for this current raffle
-    uint public numberOfTickets; // = totalAmount / ticketCost
+    uint public numberOfTickets; // = totalAmount / ticketPrice
 
     // For Random generation
     uint private latestBlockNumber;
@@ -110,17 +110,17 @@ contract Raffle is SafeMath {
     /**
     * @notice Constructor that's used to configure the minimum bet per game and the max amount of bets
     * @param _totalAmount The total amount of the raffle
-    * @param _ticketCost The cost of the ticket
+    * @param _ticketPrice The cost of the ticket
     * @param _numberOfPrizeTiers Number of prize tiers
     */
-    constructor(address _raffleOwner, uint _feePercentage, uint _totalAmount, uint _ticketCost, uint8 _numberOfPrizeTiers) public {
+    constructor(address _raffleOwner, uint _feePercentage, uint _totalAmount, uint _ticketPrice, uint8 _numberOfPrizeTiers) public {
         spawner = msg.sender;
 
         require(_raffleOwner != address(0), "should be valid address");
         require(_feePercentage < 100, "fee should be less than 100 %");
 
         if(_totalAmount > 0 && _totalAmount <= MAX_RAFFLE_AMOUNT) totalAmount = _totalAmount;
-        if(_ticketCost > MIN_TICKET_COST && _ticketCost <= _totalAmount) ticketCost = _ticketCost;
+        if(_ticketPrice > MIN_TICKET_COST && _ticketPrice <= _totalAmount) ticketPrice = _ticketPrice;
         if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
 
         latestBlockNumber = block.number;
@@ -128,7 +128,7 @@ contract Raffle is SafeMath {
 
         feePercentage = _feePercentage;
         raffleOwner = _raffleOwner;
-        numberOfTickets = (totalAmount + ticketCost - 1) / ticketCost;
+        numberOfTickets = (totalAmount + ticketPrice - 1) / ticketPrice;
     }
 
     /**
@@ -158,7 +158,7 @@ contract Raffle is SafeMath {
         // Check that the max amount of bets hasn't been met yet
         require(currentTicket < numberOfTickets, "raffle amount is reached");
         // Check if ticket cost is correct
-        require(msg.value == ticketCost * _count, "ticket cost is not correct");
+        require(msg.value == ticketPrice * _count, "ticket cost is not correct");
         
         uint i = 0;
         for (i = 0; i < _count; i++) {
@@ -166,7 +166,7 @@ contract Raffle is SafeMath {
             // The player msg.sender has bet for this number 'currentTicket'
             numberBetPlayers[currentTicket] = msg.sender;
             // calculate total bet for this raffle
-            totalBet = safeAdd(totalBet, ticketCost);
+            totalBet = safeAdd(totalBet, ticketPrice);
             
             if (currentTicket >= numberOfTickets) {
                 break;
