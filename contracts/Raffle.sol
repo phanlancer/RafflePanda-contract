@@ -243,18 +243,6 @@ contract Raffle is SafeMath {
     * players for the next game and resets the `totalBet` and `currentTicket`
     */
     function distributePrizes() private onEndGame isFilledPrizeTiers {
-        // pay fee to RafflePanda company
-        if(feePercentage > 0) {
-            uint fee;
-            fee = safeDiv(safeMul(totalBet, feePercentage), 100);
-            feePercentage = 0;
-            orgAddress.transfer(fee);
-            totalBet = safeSub(totalBet, fee);
-
-            // event log when withdraw fees to the org address
-            emit WithdrawFeeToSpawner(fee);
-        }
-
         // Loop through all the winners to send the corresponding prize for each one
         uint8 i;
         uint8 j;
@@ -269,6 +257,18 @@ contract Raffle is SafeMath {
                     prizeTiers[i].winNumbers[j],
                     prizeTiers[i].amountOfWinning, i + 1);
             }
+        }
+
+        // pay fee to RafflePanda company
+        if(feePercentage > 0) {
+            uint fee;
+            fee = safeDiv(safeMul(totalBet, feePercentage), 100);
+            feePercentage = 0;
+            orgAddress.transfer(fee);
+            totalBet = safeSub(totalBet, fee);
+
+            // event log when withdraw fees to the org address
+            emit WithdrawFeeToSpawner(fee);
         }
 
         // raised funds are sent to the raffle owner(fundraiser)
