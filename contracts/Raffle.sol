@@ -114,7 +114,14 @@ contract Raffle is SafeMath {
     * @param _ticketPrice The cost of the ticket
     * @param _numberOfPrizeTiers Number of prize tiers
     */
-    constructor(address _orgAddress, address _raffleOwner, uint _feePercentage, uint _totalAmount, uint _ticketPrice, uint8 _numberOfPrizeTiers) public {
+    constructor(
+        address _orgAddress,
+        address _raffleOwner,
+        uint _feePercentage,
+        uint _totalAmount,
+        uint _ticketPrice,
+        uint8 _numberOfPrizeTiers
+    ) public {
         spawner = msg.sender;
 
         require(_raffleOwner != address(0), "should be valid address");
