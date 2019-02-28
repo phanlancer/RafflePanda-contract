@@ -43,6 +43,7 @@ contract SafeMath {
  */
 contract Raffle is SafeMath {
     address spawner; // (RafflePanda company) who spawn the Raffle contract. It's different from the Raffle Owner
+    address orgAddress; // Raffle Panda Company address. Fees are sent to this address
 
     // Structure of prize tier for winners
     struct PrizeTier {
@@ -113,10 +114,11 @@ contract Raffle is SafeMath {
     * @param _ticketPrice The cost of the ticket
     * @param _numberOfPrizeTiers Number of prize tiers
     */
-    constructor(address _raffleOwner, uint _feePercentage, uint _totalAmount, uint _ticketPrice, uint8 _numberOfPrizeTiers) public {
+    constructor(address _orgAddress, address _raffleOwner, uint _feePercentage, uint _totalAmount, uint _ticketPrice, uint8 _numberOfPrizeTiers) public {
         spawner = msg.sender;
 
         require(_raffleOwner != address(0), "should be valid address");
+        require(_orgAddress != address(0), "should be valid address");
         require(_feePercentage < 100, "fee should be less than 100 %");
 
         if(_totalAmount > 0 && _totalAmount <= MAX_RAFFLE_AMOUNT) totalAmount = _totalAmount;
@@ -128,6 +130,7 @@ contract Raffle is SafeMath {
 
         feePercentage = _feePercentage;
         raffleOwner = _raffleOwner;
+        orgAddress = _orgAddress;
         numberOfTickets = (totalAmount + ticketPrice - 1) / ticketPrice;
     }
 
@@ -238,10 +241,10 @@ contract Raffle is SafeMath {
             uint fee;
             fee = safeDiv(safeMul(totalBet, feePercentage), 100);
             feePercentage = 0;
-            spawner.transfer(fee);
+            orgAddress.transfer(fee);
             totalBet = safeSub(totalBet, fee);
 
-            // event log when withdraw fees to the contract spawner
+            // event log when withdraw fees to the org address
             emit WithdrawFeeToSpawner(fee);
         }
 
