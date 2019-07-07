@@ -177,11 +177,11 @@ contract Raffle is SafeMath {
             numberBetPlayers[currentTicket] = msg.sender;
             // calculate total bet for this raffle
             totalBet = safeAdd(totalBet, ticketPrice);
-            
+
             if (currentTicket >= numberOfTickets) {
                 break;
             }
-        
+
             cumulativeHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
             latestBlockNumber = block.number;
         }
