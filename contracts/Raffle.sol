@@ -185,11 +185,11 @@ contract Raffle is SafeMath {
             cumulativeHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
             latestBlockNumber = block.number;
         }
-        
+
         if (currentTicket >= numberOfTickets) {
             drawWinners();
         }
-        
+
         emit BuyTicket(currentTicket, msg.sender, i);
     }
 
