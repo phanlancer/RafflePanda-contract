@@ -102,7 +102,7 @@ contract Raffle is SafeMath {
         require(prizeTiers.length == numberOfPrizeTiers, "contract needs required prize tiers");
         _;
     }
-    
+
     // Modifier to only allow the execution of functions when the bets are completed
     modifier onEndGame() {
         if(totalBet >= totalAmount) _;
@@ -169,7 +169,7 @@ contract Raffle is SafeMath {
         require(currentTicket < numberOfTickets, "raffle amount is reached");
         // Check if ticket cost is correct
         require(msg.value == ticketPrice * _count, "ticket cost is not correct");
-        
+
         uint i = 0;
         for (i = 0; i < _count; i++) {
             currentTicket ++;
