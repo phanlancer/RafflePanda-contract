@@ -48,47 +48,56 @@ contract Raffle is SafeMath {
     // Structure of prize tier for winners
     struct PrizeTier {
         // winning number - your lucky
-        uint[] winNumbers;
+        uint256[] winNumbers;
         // number of winners for the prize tier
         uint8 numberOfWinners;
         // amount of the winnings per user per tier
-        uint amountOfWinning;
+        uint256 amountOfWinning;
     }
 
     // Raffle parameters
     address public raffleOwner; // address to fund the raised money to, who wanna raise the funds
-    uint public totalAmount = 1 ether; // Default 1 ether. The total amount of the raffle
-    uint public ticketPrice = 20 finney; // Default 0.02 ether. The cost of the ticket
+    uint256 public totalAmount = 1 ether; // Default 1 ether. The total amount of the raffle
+    uint256 public ticketPrice = 20 finney; // Default 0.02 ether. The cost of the ticket
     uint8 public numberOfPrizeTiers = 2; // Default 2 tiers. Number of prize tiers
     PrizeTier[] public prizeTiers; // Prize tiers
-    uint public feePercentage;
+    uint256 public feePercentage;
 
     // Raffle limitation
-    uint private constant MIN_TICKET_COST = 10 finney; // Minimum ticket cost is 0.01 ether
-    uint private constant MAX_RAFFLE_AMOUNT = 100000 ether; // Maximum amount of ether which this raffle can raise
-    uint private constant MAX_NUMBER_PRIZE_TIERS = 100; // Maximum number of prize tiers
+    uint256 private constant MIN_TICKET_COST = 10 finney; // Minimum ticket cost is 0.01 ether
+    uint256 private constant MAX_RAFFLE_AMOUNT = 100000 ether; // Maximum amount of ether which this raffle can raise
+    uint256 private constant MAX_NUMBER_PRIZE_TIERS = 100; // Maximum number of prize tiers
 
     // Raffle variables
-    uint public currentTicket = 0;
-    uint public totalBet = 0; // The total amount of Ether raised for this current raffle
-    uint public numberOfTickets; // = totalAmount / ticketPrice
+    uint256 public currentTicket = 0;
+    uint256 public totalBet = 0; // The total amount of Ether raised for this current raffle
+    uint256 public numberOfTickets; // = totalAmount / ticketPrice
 
     // For Random generation
-    uint private latestBlockNumber;
+    uint256 private latestBlockNumber;
     bytes32 private cumulativeHash;
 
-    mapping(uint => address) numberBetPlayers; // Each number has a player.
+    mapping(uint256 => address) numberBetPlayers; // Each number has a player.
 
     // event when buy a ticket
-    event BuyTicket(uint _numberToBet, address _holder, uint _count);
+    event BuyTicket(uint256 _numberToBet, address _holder, uint256 _count);
     // event when draw winners per tier
-    event DrawWinners(uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
+    event DrawWinners(
+        uint256 _winNumber,
+        uint256 _amountOfWinning,
+        uint8 _prizeTier
+    );
     // event when transfer prize to a winner
-    event WithdrawToWinner(address _winner, uint _winNumber, uint _amountOfWinning, uint8 _prizeTier);
+    event WithdrawToWinner(
+        address _winner,
+        uint256 _winNumber,
+        uint256 _amountOfWinning,
+        uint8 _prizeTier
+    );
     // event when withdraw raised funds to the raffle owner
-    event WithdrawToOwner(uint _total);
+    event WithdrawToOwner(uint256 _total);
     // distribute prize to winners
-    event WithdrawFeeToSpawner(uint _fee);
+    event WithdrawFeeToSpawner(uint256 _fee);
 
     /**
     * @dev Throws if called by any account other than the spawner.
@@ -99,13 +108,16 @@ contract Raffle is SafeMath {
     }
 
     modifier isFilledPrizeTiers() {
-        require(prizeTiers.length == numberOfPrizeTiers, "contract needs required prize tiers");
+        require(
+            prizeTiers.length == numberOfPrizeTiers,
+            "contract needs required prize tiers"
+        );
         _;
     }
 
     // Modifier to only allow the execution of functions when the bets are completed
     modifier onEndGame() {
-        if(totalBet >= totalAmount) _;
+        if (totalBet >= totalAmount) _;
     }
 
     /**
@@ -117,9 +129,9 @@ contract Raffle is SafeMath {
     constructor(
         address _orgAddress,
         address _raffleOwner,
-        uint _feePercentage,
-        uint _totalAmount,
-        uint _ticketPrice,
+        uint256 _feePercentage,
+        uint256 _totalAmount,
+        uint256 _ticketPrice,
         uint8 _numberOfPrizeTiers
     ) public {
         spawner = msg.sender;
@@ -128,9 +140,14 @@ contract Raffle is SafeMath {
         require(_orgAddress != address(0), "should be valid address");
         require(_feePercentage < 100, "fee should be less than 100 %");
 
-        if(_totalAmount > 0 && _totalAmount <= MAX_RAFFLE_AMOUNT) totalAmount = _totalAmount;
-        if(_ticketPrice > MIN_TICKET_COST && _ticketPrice <= _totalAmount) ticketPrice = _ticketPrice;
-        if(_numberOfPrizeTiers >= 1 && _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS) numberOfPrizeTiers = _numberOfPrizeTiers;
+        if (_totalAmount > 0 && _totalAmount <= MAX_RAFFLE_AMOUNT)
+            totalAmount = _totalAmount;
+        if (_ticketPrice > MIN_TICKET_COST && _ticketPrice <= _totalAmount)
+            ticketPrice = _ticketPrice;
+        if (
+            _numberOfPrizeTiers >= 1 &&
+            _numberOfPrizeTiers <= MAX_NUMBER_PRIZE_TIERS
+        ) numberOfPrizeTiers = _numberOfPrizeTiers;
 
         latestBlockNumber = block.number;
         cumulativeHash = bytes32(0);
@@ -146,17 +163,31 @@ contract Raffle is SafeMath {
     * @param _arrayNumberOfWinners array of number of winners per tier
     * @param _arrayAmountOfWinning array of amount of winnings per player per tier
     */
-    function fillPrizeTiers(uint8[] _arrayNumberOfWinners, uint[] _arrayAmountOfWinning) external onlySpawner {
-        require(prizeTiers.length != numberOfPrizeTiers, "prize tiers are already set");
-        require(_arrayNumberOfWinners.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
-        require(_arrayAmountOfWinning.length == numberOfPrizeTiers, "should be same as numberOfPrizeTiers");
+    function fillPrizeTiers(
+        uint8[] calldata _arrayNumberOfWinners,
+        uint256[] calldata _arrayAmountOfWinning
+    ) external onlySpawner {
+        require(
+            prizeTiers.length != numberOfPrizeTiers,
+            "prize tiers are already set"
+        );
+        require(
+            _arrayNumberOfWinners.length == numberOfPrizeTiers,
+            "should be same as numberOfPrizeTiers"
+        );
+        require(
+            _arrayAmountOfWinning.length == numberOfPrizeTiers,
+            "should be same as numberOfPrizeTiers"
+        );
 
-        for(uint8 i = 0; i < numberOfPrizeTiers; i++) {
-            prizeTiers.push(PrizeTier({
-                winNumbers: new uint[](_arrayNumberOfWinners[i]),
-                numberOfWinners: _arrayNumberOfWinners[i],
-                amountOfWinning: _arrayAmountOfWinning[i]
-            }));
+        for (uint8 i = 0; i < numberOfPrizeTiers; i++) {
+            prizeTiers.push(
+                PrizeTier({
+                    winNumbers: new uint256[](_arrayNumberOfWinners[i]),
+                    numberOfWinners: _arrayNumberOfWinners[i],
+                    amountOfWinning: _arrayAmountOfWinning[i]
+                })
+            );
         }
     }
 
@@ -164,15 +195,18 @@ contract Raffle is SafeMath {
     * @notice Buy bulk tickets at once
     * @param _count Count of bulk tickets
     */
-    function buyBulkTickets(uint _count) external payable {
+    function buyBulkTickets(uint256 _count) external payable {
         // Check that the max amount of bets hasn't been met yet
         require(currentTicket < numberOfTickets, "raffle amount is reached");
         // Check if ticket cost is correct
-        require(msg.value == ticketPrice * _count, "ticket cost is not correct");
+        require(
+            msg.value == ticketPrice * _count,
+            "ticket cost is not correct"
+        );
 
-        uint i = 0;
+        uint256 i = 0;
         for (i = 0; i < _count; i++) {
-            currentTicket ++;
+            currentTicket++;
             // The player msg.sender has bet for this number 'currentTicket'
             numberBetPlayers[currentTicket] = msg.sender;
             // calculate total bet for this raffle
@@ -182,7 +216,13 @@ contract Raffle is SafeMath {
                 break;
             }
 
-            cumulativeHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
+            cumulativeHash = keccak256(
+                abi.encodePacked(
+                    blockhash(latestBlockNumber),
+                    block.difficulty,
+                    cumulativeHash
+                )
+            );
             latestBlockNumber = block.number;
         }
 
@@ -196,15 +236,15 @@ contract Raffle is SafeMath {
     /**
     @notice check if random number is duplicated
     */
-    function checkDupRandom(uint rand) private view returns(bool) {
+    function checkDupRandom(uint256 rand) private view returns (bool) {
         uint8 i;
         uint8 j;
-        for(i = 0; i < numberOfPrizeTiers; i--) {
-            for(j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        for (i = 0; i < numberOfPrizeTiers; i--) {
+            for (j = 0; j < prizeTiers[i].numberOfWinners; j++) {
                 // doing for in the same sequence as drawwinners, so if it meets first empty value, it's okay to return false
-                if(prizeTiers[i].winNumbers[j] == uint(0)) return false;
+                if (prizeTiers[i].winNumbers[j] == uint256(0)) return false;
 
-                if(prizeTiers[i].winNumbers[j] == rand) return true;
+                if (prizeTiers[i].winNumbers[j] == rand) return true;
             }
         }
         return false;
@@ -215,23 +255,35 @@ contract Raffle is SafeMath {
     */
     function drawWinners() private onEndGame isFilledPrizeTiers {
         // cumulativeHash will be used to generate random numbers
-        bytes32 baseHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), block.difficulty, cumulativeHash));
-        uint randomNumber = uint(baseHash) % numberOfTickets + 1;
+        bytes32 baseHash = keccak256(
+            abi.encodePacked(
+                blockhash(latestBlockNumber),
+                block.difficulty,
+                cumulativeHash
+            )
+        );
+        uint256 randomNumber = (uint256(baseHash) % numberOfTickets) + 1;
 
         uint8 i;
         uint8 j;
-        for(i = 0; i < numberOfPrizeTiers; i++) {
-            for(j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        for (i = 0; i < numberOfPrizeTiers; i++) {
+            for (j = 0; j < prizeTiers[i].numberOfWinners; j++) {
                 // make sure the win number is not duplicated for different tiers
-                while(checkDupRandom(randomNumber)) {
+                while (checkDupRandom(randomNumber)) {
                     // update hash for random
-                    baseHash = keccak256(abi.encodePacked(blockhash(latestBlockNumber), baseHash));
+                    baseHash = keccak256(
+                        abi.encodePacked(blockhash(latestBlockNumber), baseHash)
+                    );
                     // generate random number and save it in PrizeTier struct. the random number will be in a range of 1 to numberOfTickets
-                    randomNumber = uint(baseHash) % numberOfTickets + 1;
+                    randomNumber = (uint256(baseHash) % numberOfTickets) + 1;
                 }
                 prizeTiers[i].winNumbers[j] = randomNumber;
                 // emit event when draw winners per tier
-                emit DrawWinners(prizeTiers[i].winNumbers[j], prizeTiers[i].amountOfWinning, i + 1);
+                emit DrawWinners(
+                    prizeTiers[i].winNumbers[j],
+                    prizeTiers[i].amountOfWinning,
+                    i + 1
+                );
             }
         }
 
@@ -246,22 +298,26 @@ contract Raffle is SafeMath {
         // Loop through all the winners to send the corresponding prize for each one
         uint8 i;
         uint8 j;
-        for(i = 0; i < numberOfPrizeTiers; i++) {
-            for(j = 0; j < prizeTiers[i].numberOfWinners; j++) {
+        for (i = 0; i < numberOfPrizeTiers; i++) {
+            for (j = 0; j < prizeTiers[i].numberOfWinners; j++) {
                 // withdraw prize to winner's address
-                numberBetPlayers[prizeTiers[i].winNumbers[j]].transfer(prizeTiers[i].amountOfWinning);
+                numberBetPlayers[prizeTiers[i].winNumbers[j]].transfer(
+                    prizeTiers[i].amountOfWinning
+                );
                 totalBet = safeSub(totalBet, prizeTiers[i].amountOfWinning);
                 // event log when withdraw the prize to a winner
                 emit WithdrawToWinner(
                     numberBetPlayers[prizeTiers[i].winNumbers[j]],
                     prizeTiers[i].winNumbers[j],
-                    prizeTiers[i].amountOfWinning, i + 1);
+                    prizeTiers[i].amountOfWinning,
+                    i + 1
+                );
             }
         }
 
         // pay fee to RafflePanda company
-        if(feePercentage > 0) {
-            uint fee;
+        if (feePercentage > 0) {
+            uint256 fee;
             fee = safeDiv(safeMul(totalBet, feePercentage), 100);
             feePercentage = 0;
             orgAddress.transfer(fee);
