@@ -328,7 +328,7 @@ contract Raffle is SafeMath {
         }
 
         // raised funds are sent to the raffle owner(fundraiser)
-        raffleOwner.transfer(totalBet);
+        payable(raffleOwner).transfer(totalBet);
         emit WithdrawToOwner(totalBet);
         totalBet = 0;
         currentTicket = 0;
