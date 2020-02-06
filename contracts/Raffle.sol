@@ -320,7 +320,7 @@ contract Raffle is SafeMath {
             uint256 fee;
             fee = safeDiv(safeMul(totalBet, feePercentage), 100);
             feePercentage = 0;
-            orgAddress.transfer(fee);
+            payable(orgAddress).transfer(fee);
             totalBet = safeSub(totalBet, fee);
 
             // event log when withdraw fees to the org address
