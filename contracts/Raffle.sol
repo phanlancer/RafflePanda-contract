@@ -301,7 +301,7 @@ contract Raffle is SafeMath {
         for (i = 0; i < numberOfPrizeTiers; i++) {
             for (j = 0; j < prizeTiers[i].numberOfWinners; j++) {
                 // withdraw prize to winner's address
-                numberBetPlayers[prizeTiers[i].winNumbers[j]].transfer(
+                payable(numberBetPlayers[prizeTiers[i].winNumbers[j]]).transfer(
                     prizeTiers[i].amountOfWinning
                 );
                 totalBet = safeSub(totalBet, prizeTiers[i].amountOfWinning);
