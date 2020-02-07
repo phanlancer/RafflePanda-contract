@@ -334,13 +334,13 @@ contract Raffle is SafeMath {
         currentTicket = 0;
 
         // after distribute prizes kill the contract
-        selfdestruct(spawner);
+        selfdestruct(payable(spawner));
     }
 
     /**
     * @notice kill this contract whenever you want
     */
     function kill() public onlySpawner {
-        selfdestruct(spawner);
+        selfdestruct(payable(spawner));
     }
 }
