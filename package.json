@@ -19,10 +19,10 @@
     "babel-preset-stage-2": "^6.24.1",
     "css-loader": "^3.4.2",
     "json-loader": "^0.5.7",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "style-loader": "^0.23.1",
-    "truffle": "^5.1.17",
+    "truffle": "^5.1.18",
     "web3": "^0.20.7",
     "webpack": "^4.42.0"
   },
