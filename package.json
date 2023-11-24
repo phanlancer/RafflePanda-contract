@@ -23,7 +23,7 @@
     "react-dom": "^16.13.1",
     "style-loader": "^0.23.1",
     "truffle": "^5.10.1",
-    "web3": "^0.20.7",
+    "web3": "^4.2.1",
     "webpack": "^4.44.1"
   },
   "dependencies": {
